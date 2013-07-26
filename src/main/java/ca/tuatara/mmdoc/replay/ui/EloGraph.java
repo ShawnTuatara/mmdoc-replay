@@ -10,8 +10,6 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.time.Second;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
@@ -35,10 +33,6 @@ public class EloGraph extends JFrame {
         XYPlot xyPlot = eloChart.getXYPlot();
         DateAxis dateAxis = (DateAxis) xyPlot.getDomainAxis();
         dateAxis.setDateFormatOverride(new SimpleDateFormat("yyyy-MM-dd"));
-        XYItemRenderer renderer = xyPlot.getRendererForDataset(seriesCollection);
-        XYLineAndShapeRenderer standardRenderer = (XYLineAndShapeRenderer) renderer;
-        standardRenderer.setBaseShapesFilled(true);
-        standardRenderer.setBaseShapesVisible(true);
 
         ChartPanel chartPanel = new ChartPanel(eloChart);
         chartPanel.setPreferredSize(new java.awt.Dimension(1000, 500));
