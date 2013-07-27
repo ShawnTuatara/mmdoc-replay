@@ -14,7 +14,7 @@ import org.jfree.data.time.Second;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
-import ca.tuatara.mmdoc.replay.Replay;
+import ca.tuatara.mmdoc.replay.data.Replay;
 
 public class EloGraph extends JFrame {
     private static final long serialVersionUID = 1L;

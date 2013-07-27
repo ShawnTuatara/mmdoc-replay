@@ -6,9 +6,9 @@
         </encoder>
     </appender>
 
-    <logger name="ca.tuatara.mmdoc.replay" level="trace" />
+    <logger name="ca.tuatara.mmdoc.replay.parser" level="INFO" />
 
-    <root level="info">
+    <root level="INFO">
         <appender-ref ref="STDOUT" />
     </root>
 </configuration>
