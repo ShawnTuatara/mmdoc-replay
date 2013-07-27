@@ -1,6 +1,9 @@
 package ca.tuatara.mmdoc.replay.jackson;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,6 +22,7 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 
 import ca.tuatara.mmdoc.replay.data.command.Command;
 import ca.tuatara.mmdoc.replay.data.command.CommandAction;
+import ca.tuatara.mmdoc.replay.data.command.Offset;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -75,17 +79,44 @@ public class CommandCollectionDeserializer extends ContainerDeserializerBase<Col
             commandClass = Command.class;
         }
 
+        int commandId = Integer.parseInt(splitOnId[0]);
+        String commandAction = commandValues[0];
+        List<String> values = Arrays.asList(ArrayUtils.remove(commandValues, 0));
+
         Command command = null;
         try {
             command = commandClass.newInstance();
-            command.setId(Integer.parseInt(splitOnId[0]));
-            command.setAction(commandValues[0]);
-            command.setValues(Arrays.asList(ArrayUtils.remove(commandValues, 0)));
+            command.setId(commandId);
+            command.setAction(commandAction);
+            setValues(command, values, commandClass);
         } catch (InstantiationException | IllegalAccessException e) {
             LOG.error("Unable to instantiate command class", e);
         }
 
         return command;
+    }
+
+    public void setValues(Command command, List<String> values, Class<? extends Command> commandClass) {
+        boolean hasCustomValues = false;
+        Field[] fields = commandClass.getDeclaredFields();
+        for (Field field : fields) {
+            Offset offset = field.getAnnotation(Offset.class);
+            if (offset != null) {
+                try {
+                    Method method = commandClass.getMethod("set" + StringUtils.capitalize(field.getName()), field.getType());
+                    if (field.getType() == Integer.TYPE) {
+                        method.invoke(command, Integer.parseInt(values.get(offset.value())));
+                        hasCustomValues = true;
+                    }
+                } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                    LOG.error("Unable to assign game over value to field", e);
+                }
+            }
+        }
+
+        if (!hasCustomValues) {
+            command.setValues(values);
+        }
     }
 
     private void buildCommandActionMap() {
