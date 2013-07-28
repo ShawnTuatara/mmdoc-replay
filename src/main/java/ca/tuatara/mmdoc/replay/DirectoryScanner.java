@@ -2,6 +2,7 @@ package ca.tuatara.mmdoc.replay;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import java.util.List;
 
 import javax.swing.JFrame;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +23,12 @@ public class DirectoryScanner {
 
     public static void main(String[] args) {
         File replayDirectory = new File(args[0]);
-        File[] replayFiles = replayDirectory.listFiles();
+        File[] replayFiles = replayDirectory.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return StringUtils.endsWith(name, ".replay");
+            }
+        });
 
         List<Replay> replays = new ArrayList<Replay>();
         ReplayParser replayParser = new ReplayParser();

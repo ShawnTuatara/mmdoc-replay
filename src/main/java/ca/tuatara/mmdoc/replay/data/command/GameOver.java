@@ -1,5 +1,6 @@
 package ca.tuatara.mmdoc.replay.data.command;
 
+import ca.tuatara.mmdoc.replay.data.BonusType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -26,6 +27,12 @@ public class GameOver extends Command {
 
     @Offset(5)
     private int dmgInflictedBonus;
+
+    @Offset(6)
+    private BonusType bonusType;
+
+    @Offset(7)
+    private int bonusGold;
 
     @Offset(10)
     private int goldBoost;

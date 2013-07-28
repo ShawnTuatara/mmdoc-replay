@@ -51,6 +51,8 @@ public class ReplaySpreadsheet {
 
         headerRow.createCell(numOfColumns++).setCellValue("Gold");
         headerRow.createCell(numOfColumns++).setCellValue("Damage Bonus");
+        headerRow.createCell(numOfColumns++).setCellValue("Bonus Type");
+        headerRow.createCell(numOfColumns++).setCellValue("Bonus Gold");
         headerRow.createCell(numOfColumns++).setCellValue("Gold Boost");
 
         for (int rowIndex = 1; rowIndex < replays.size(); rowIndex++) {
@@ -81,6 +83,8 @@ public class ReplaySpreadsheet {
 
             row.createCell(cellIndex++).setCellValue(gameOver.getGold());
             row.createCell(cellIndex++).setCellValue(gameOver.getDmgInflictedBonus());
+            row.createCell(cellIndex++).setCellValue(gameOver.getBonusType() != null ? gameOver.getBonusType().name() : "");
+            row.createCell(cellIndex++).setCellValue(gameOver.getBonusGold());
             row.createCell(cellIndex++).setCellValue(gameOver.getGoldBoost());
         } else {
             row.createCell(cellIndex++).setCellValue("Loss - Error");

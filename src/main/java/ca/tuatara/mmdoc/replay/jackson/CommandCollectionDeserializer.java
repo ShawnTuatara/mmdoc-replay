@@ -25,6 +25,7 @@ import ca.tuatara.mmdoc.replay.data.command.CommandAction;
 import ca.tuatara.mmdoc.replay.data.command.GameOver;
 import ca.tuatara.mmdoc.replay.data.command.Offset;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
@@ -110,10 +111,20 @@ public class CommandCollectionDeserializer extends ContainerDeserializerBase<Col
             Offset offset = field.getAnnotation(Offset.class);
             if (offset != null) {
                 try {
-                    Method method = commandClass.getMethod("set" + StringUtils.capitalize(field.getName()), field.getType());
-                    if (field.getType() == Integer.TYPE) {
-                        method.invoke(command, Integer.parseInt(values.get(offset.value())));
+                    Class<?> fieldType = field.getType();
+                    Method method = commandClass.getMethod("set" + StringUtils.capitalize(field.getName()), fieldType);
+                    int value = Integer.parseInt(values.get(offset.value()));
+                    if (fieldType == Integer.TYPE) {
+                        method.invoke(command, value);
                         hasCustomValues = true;
+                    } else if (fieldType.isEnum()) {
+                        Method[] enumMethods = fieldType.getMethods();
+                        for (Method enumMethod : enumMethods) {
+                            if (enumMethod.getAnnotation(JsonCreator.class) != null) {
+                                Object enumObject = enumMethod.invoke(null, value);
+                                method.invoke(command, enumObject);
+                            }
+                        }
                     }
                 } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
                     LOG.error("Unable to assign game over value to field", e);
