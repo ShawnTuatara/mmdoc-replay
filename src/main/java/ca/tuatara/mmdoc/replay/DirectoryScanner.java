@@ -51,7 +51,7 @@ public class DirectoryScanner {
         if ("excel".equals(args[1])) {
             ReplaySpreadsheet replaySpreadsheet = new ReplaySpreadsheet(replays);
             try {
-                OutputStream outputStream = new FileOutputStream("replays.xlsx");
+                OutputStream outputStream = new FileOutputStream("target/replays.xlsx");
                 replaySpreadsheet.write(outputStream);
                 outputStream.close();
             } catch (IOException e) {
