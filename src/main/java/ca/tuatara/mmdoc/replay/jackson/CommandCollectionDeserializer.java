@@ -22,6 +22,7 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 
 import ca.tuatara.mmdoc.replay.data.command.Command;
 import ca.tuatara.mmdoc.replay.data.command.CommandAction;
+import ca.tuatara.mmdoc.replay.data.command.GameOver;
 import ca.tuatara.mmdoc.replay.data.command.Offset;
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -88,6 +89,12 @@ public class CommandCollectionDeserializer extends ContainerDeserializerBase<Col
             command = commandClass.newInstance();
             command.setId(commandId);
             command.setAction(commandAction);
+            if (commandClass.equals(GameOver.class)) {
+                GameOver gameOver = (GameOver) command;
+                if ("GameWon".equals(commandAction)) {
+                    gameOver.setWon(true);
+                }
+            }
             setValues(command, values, commandClass);
         } catch (InstantiationException | IllegalAccessException e) {
             LOG.error("Unable to instantiate command class", e);
@@ -96,7 +103,7 @@ public class CommandCollectionDeserializer extends ContainerDeserializerBase<Col
         return command;
     }
 
-    public void setValues(Command command, List<String> values, Class<? extends Command> commandClass) {
+    private void setValues(Command command, List<String> values, Class<? extends Command> commandClass) {
         boolean hasCustomValues = false;
         Field[] fields = commandClass.getDeclaredFields();
         for (Field field : fields) {

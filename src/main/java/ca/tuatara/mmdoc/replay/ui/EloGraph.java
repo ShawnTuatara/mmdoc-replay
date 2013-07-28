@@ -24,7 +24,7 @@ public class EloGraph extends JFrame {
 
         TimeSeries eloSeries = new TimeSeries("Elo");
         for (Replay replay : replays) {
-            eloSeries.add(new Second(replay.getDatePlayed()), replay.getOwnerElo());
+            eloSeries.add(new Second(replay.getDatePlayed()), replay.getPlayerElo());
         }
 
         TimeSeriesCollection seriesCollection = new TimeSeriesCollection(eloSeries);

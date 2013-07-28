@@ -31,8 +31,10 @@ public class GameOver extends Command {
     private int goldBoost;
 
     @Offset(15)
-    private int player1Elo;
+    private int playerElo;
 
     @Offset(16)
-    private int player2Elo;
+    private int opponentElo;
+
+    private boolean won;
 }

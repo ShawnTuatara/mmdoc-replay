@@ -40,6 +40,10 @@ public class ReplaySpreadsheet {
         headerRow.createCell(numOfColumns++).setCellValue("Opponent Elo");
 
         // Game Over Details
+        headerRow.createCell(numOfColumns++).setCellValue("Game Won");
+        headerRow.createCell(numOfColumns++).setCellValue("Player Elo");
+        headerRow.createCell(numOfColumns++).setCellValue("Opponent Elo");
+
         headerRow.createCell(numOfColumns++).setCellValue("XP");
         headerRow.createCell(numOfColumns++).setCellValue("Victory Bonus");
         headerRow.createCell(numOfColumns++).setCellValue("Endurance Bonus");
@@ -66,13 +70,20 @@ public class ReplaySpreadsheet {
     private void addGameOverDetails(Replay replay, Row row, int cellIndex) {
         GameOver gameOver = replay.getCommand(GameOver.class);
         if (gameOver != null) {
+            row.createCell(cellIndex++).setCellValue(gameOver.isWon() ? "Won" : "Loss");
+            row.createCell(cellIndex++).setCellValue(gameOver.getPlayerElo());
+            row.createCell(cellIndex++).setCellValue(gameOver.getOpponentElo());
+
             row.createCell(cellIndex++).setCellValue(gameOver.getXp());
             row.createCell(cellIndex++).setCellValue(gameOver.getVictoryBonus());
             row.createCell(cellIndex++).setCellValue(gameOver.getEnduranceBonus());
             row.createCell(cellIndex++).setCellValue(gameOver.getXpBoost());
+
             row.createCell(cellIndex++).setCellValue(gameOver.getGold());
             row.createCell(cellIndex++).setCellValue(gameOver.getDmgInflictedBonus());
             row.createCell(cellIndex++).setCellValue(gameOver.getGoldBoost());
+        } else {
+            row.createCell(cellIndex++).setCellValue("Loss - Error");
         }
     }
 
@@ -84,15 +95,9 @@ public class ReplaySpreadsheet {
 
         row.createCell(cellIndex++).setCellValue(replay.isEnableLocalDraw());
         row.createCell(cellIndex++).setCellValue(replay.isHotSeat());
-        if (replay.getOwnerPlayer() == 0) {
-            row.createCell(cellIndex++).setCellValue(replay.getEloPlayer1());
-            row.createCell(cellIndex++).setCellValue(replay.getNamePlayer2());
-            row.createCell(cellIndex++).setCellValue(replay.getEloPlayer2());
-        } else {
-            row.createCell(cellIndex++).setCellValue(replay.getEloPlayer2());
-            row.createCell(cellIndex++).setCellValue(replay.getNamePlayer1());
-            row.createCell(cellIndex++).setCellValue(replay.getEloPlayer1());
-        }
+        row.createCell(cellIndex++).setCellValue(replay.getPlayerElo());
+        row.createCell(cellIndex++).setCellValue(replay.getOpponentName());
+        row.createCell(cellIndex++).setCellValue(replay.getOpponentElo());
     }
 
     public void write(OutputStream outputStream) throws IOException {
