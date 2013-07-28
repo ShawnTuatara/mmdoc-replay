@@ -97,7 +97,7 @@ public class ReplaySpreadsheet {
         datePlayedRow.setCellValue(replay.getDatePlayed());
         datePlayedRow.setCellStyle(dateStyle);
 
-        row.createCell(cellIndex++).setCellValue(replay.isEnableLocalDraw());
+        row.createCell(cellIndex++).setCellValue(replay.isLocalDrawEnabled());
         row.createCell(cellIndex++).setCellValue(replay.isHotSeat());
         row.createCell(cellIndex++).setCellValue(replay.getPlayerElo());
         row.createCell(cellIndex++).setCellValue(replay.getOpponentName());
