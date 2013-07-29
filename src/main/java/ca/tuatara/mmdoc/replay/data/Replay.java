@@ -5,6 +5,8 @@ import java.util.List;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import ca.tuatara.mmdoc.card.Deck;
+import ca.tuatara.mmdoc.card.DeckSummary;
 import ca.tuatara.mmdoc.replay.data.command.Command;
 
 @Data
@@ -27,6 +29,12 @@ public class Replay {
     private short playerElo;
 
     private short opponentElo;
+
+    private Deck playerDeck;
+
+    private DeckSummary playerDeckSummary;
+
+    private DeckSummary opponentDeckSummary;
 
     private List<? extends Command> commands;
 

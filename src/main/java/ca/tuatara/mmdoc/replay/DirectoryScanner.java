@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.tuatara.mmdoc.card.CardManager;
 import ca.tuatara.mmdoc.replay.data.Replay;
 import ca.tuatara.mmdoc.replay.parser.ReplayParser;
 import ca.tuatara.mmdoc.replay.ui.EloGraph;
@@ -31,7 +32,7 @@ public class DirectoryScanner {
         });
 
         List<Replay> replays = new ArrayList<Replay>();
-        ReplayParser replayParser = new ReplayParser();
+        ReplayParser replayParser = new ReplayParser(new CardManager());
         for (File file : replayFiles) {
             try {
                 Replay replay = replayParser.parse(file);

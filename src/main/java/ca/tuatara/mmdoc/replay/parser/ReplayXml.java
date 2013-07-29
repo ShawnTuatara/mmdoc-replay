@@ -26,6 +26,10 @@ public class ReplayXml {
 
     private short eloPlayer2;
 
+    private String deckPlayer1;
+
+    private String deckPlayer2;
+
     @JsonProperty("ReplayCommandList")
     private String commands;
 }

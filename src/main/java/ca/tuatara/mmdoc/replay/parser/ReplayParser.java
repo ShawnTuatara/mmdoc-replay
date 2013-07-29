@@ -29,6 +29,12 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 
 import ca.tuatara.jackson.CapitalizeBooleanDeserializer;
 import ca.tuatara.jackson.CapitalizeNamingStrategy;
+import ca.tuatara.mmdoc.card.CardManager;
+import ca.tuatara.mmdoc.card.Deck;
+import ca.tuatara.mmdoc.card.DeckSummary;
+import ca.tuatara.mmdoc.card.DirectoryScanner;
+import ca.tuatara.mmdoc.card.data.Card;
+import ca.tuatara.mmdoc.card.data.CardType;
 import ca.tuatara.mmdoc.replay.data.Replay;
 import ca.tuatara.mmdoc.replay.data.command.Command;
 import ca.tuatara.mmdoc.replay.data.command.CommandAction;
@@ -48,7 +54,11 @@ public class ReplayParser {
 
     private HashMap<String, Class<? extends Command>> commandActionMap;
 
-    public ReplayParser() {
+    private CardManager cardManager;
+
+    public ReplayParser(CardManager cardManager) {
+        this.cardManager = cardManager;
+
         JacksonXmlModule module = new JacksonXmlModule();
         module.addDeserializer(Boolean.TYPE, new CapitalizeBooleanDeserializer());
         xmlMapper = new XmlMapper(module);
@@ -61,7 +71,13 @@ public class ReplayParser {
         try {
             URL replayLocation = new URL(args[0]);
 
-            Replay replay = new ReplayParser().parse(replayLocation);
+            DirectoryScanner directoryScanner = new DirectoryScanner(args[1]);
+            CardManager manager = new CardManager();
+            manager.addCards(directoryScanner.loadCards());
+
+            Replay replay = new ReplayParser(manager).parse(replayLocation);
+
+            LOG.debug("{}", replay);
         } catch (IOException e) {
             LOG.error("Unable parse replay", e);
         }
@@ -92,9 +108,66 @@ public class ReplayParser {
         replay.setPlayerElo(replayXml.getOwnerPlayer() == 0 ? replayXml.getEloPlayer1() : replayXml.getEloPlayer2());
         replay.setOpponentName(replayXml.getOwnerPlayer() == 0 ? replayXml.getNamePlayer2() : replayXml.getNamePlayer1());
         replay.setOpponentElo(replayXml.getOwnerPlayer() == 0 ? replayXml.getEloPlayer2() : replayXml.getEloPlayer1());
+
+        String playerDeck = replayXml.getOwnerPlayer() == 0 ? replayXml.getDeckPlayer1() : replayXml.getDeckPlayer2();
+        if (playerDeck.contains(CardType.Creature.name())) {
+            replay.setPlayerDeckSummary(parseDeckSummary(playerDeck));
+        } else {
+            replay.setPlayerDeck(parseDeck(playerDeck));
+        }
+        replay.setOpponentDeckSummary(parseDeckSummary(replayXml.getOwnerPlayer() == 0 ? replayXml.getDeckPlayer2() : replayXml.getDeckPlayer1()));
+
         replay.setCommands(parseCommands(replayXml.getCommands()));
         LOG.trace("{}", replay);
         return replay;
+    }
+
+    private DeckSummary parseDeckSummary(String deckSummaryInput) {
+        DeckSummary deckSummary = new DeckSummary();
+        String[] summaryElements = deckSummaryInput.split("\n");
+        String cardId = summaryElements[0].split("|")[1];
+        deckSummary.setHero(cardManager.getCardById(Integer.parseInt(cardId)));
+        for (int elementIndex = 1; elementIndex < summaryElements.length; elementIndex++) {
+            String[] elementDetails = StringUtils.trimToEmpty(summaryElements[elementIndex]).split(",");
+
+            String cardTypeString = StringUtils.removeEnd(elementDetails[1], "Card");
+            CardType cardType = CardType.valueOf(cardTypeString);
+            switch (cardType) {
+            case Creature:
+                deckSummary.setCreatureCount(Integer.parseInt(elementDetails[0]));
+                break;
+            case Event:
+                deckSummary.setEventCount(Integer.parseInt(elementDetails[0]));
+                break;
+            case Spell:
+                deckSummary.setSpellCount(Integer.parseInt(elementDetails[0]));
+                break;
+            case Fortune:
+                deckSummary.setFortuneCount(Integer.parseInt(elementDetails[0]));
+                break;
+            case Hero:
+            }
+
+        }
+        return deckSummary;
+    }
+
+    private Deck parseDeck(String deckInput) {
+        Deck deck = new Deck();
+
+        String[] cards = deckInput.split("\n");
+        deck.setHero(cardManager.getCardById(Integer.parseInt(StringUtils.trimToEmpty(cards[0]).split(",")[1])));
+        cards = ArrayUtils.remove(cards, 0);
+        for (String card : cards) {
+            String[] cardDetails = StringUtils.trimToEmpty(card).split(",");
+            Card cardById = cardManager.getCardById(Integer.parseInt(cardDetails[1]));
+            int numberOfCardsById = Integer.parseInt(cardDetails[0]);
+            for (int cardCount = 0; cardCount < numberOfCardsById; cardCount++) {
+                deck.addCard(cardById);
+            }
+        }
+
+        return deck;
     }
 
     private List<Command> parseCommands(String replayCommandsAsString) {
