@@ -1,9 +1,11 @@
 package ca.tuatara.mmdoc.replay.data.command;
 
-import ca.tuatara.mmdoc.replay.data.BonusType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import ca.tuatara.mmdoc.replay.data.BonusType;
+import ca.tuatara.mmdoc.replay.data.command.annotation.CommandAction;
+import ca.tuatara.mmdoc.replay.data.command.annotation.Offset;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

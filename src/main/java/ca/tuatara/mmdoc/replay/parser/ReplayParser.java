@@ -37,9 +37,9 @@ import ca.tuatara.mmdoc.card.data.Card;
 import ca.tuatara.mmdoc.card.data.CardType;
 import ca.tuatara.mmdoc.replay.data.Replay;
 import ca.tuatara.mmdoc.replay.data.command.Command;
-import ca.tuatara.mmdoc.replay.data.command.CommandAction;
 import ca.tuatara.mmdoc.replay.data.command.GameOver;
-import ca.tuatara.mmdoc.replay.data.command.Offset;
+import ca.tuatara.mmdoc.replay.data.command.annotation.CommandAction;
+import ca.tuatara.mmdoc.replay.data.command.annotation.Offset;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
@@ -76,6 +76,11 @@ public class ReplayParser {
             manager.addCards(directoryScanner.loadCards());
 
             Replay replay = new ReplayParser(manager).parse(replayLocation);
+
+            List<? extends Command> commands = replay.getCommands();
+            for (Command command : commands) {
+                LOG.debug("{}", command);
+            }
 
             LOG.debug("{}", replay);
         } catch (IOException e) {
@@ -222,21 +227,29 @@ public class ReplayParser {
                 try {
                     Class<?> fieldType = field.getType();
                     Method method = commandClass.getMethod("set" + StringUtils.capitalize(field.getName()), fieldType);
-                    int value = Integer.parseInt(values.get(offset.value()));
+                    String value = values.get(offset.value());
                     if (fieldType == Integer.TYPE) {
+                        method.invoke(command, Integer.parseInt(value));
+                    } else if (fieldType == String.class) {
                         method.invoke(command, value);
-                        hasCustomValues = true;
                     } else if (fieldType.isEnum()) {
                         Method[] enumMethods = fieldType.getMethods();
                         for (Method enumMethod : enumMethods) {
                             if (enumMethod.getAnnotation(JsonCreator.class) != null) {
-                                Object enumObject = enumMethod.invoke(null, value);
+                                Object enumObject = enumMethod.invoke(null, Integer.parseInt(value));
                                 method.invoke(command, enumObject);
                             }
                         }
+                    } else if (offset.includeRest() && fieldType.isAssignableFrom(List.class)) {
+                        ArrayList<String> remainingValues = new ArrayList<String>();
+                        for (int valueIndex = offset.value(); valueIndex < values.size(); valueIndex++) {
+                            remainingValues.add(values.get(valueIndex));
+                        }
+                        method.invoke(command, remainingValues);
                     }
+                    hasCustomValues = true;
                 } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-                    LOG.error("Unable to assign game over value to field", e);
+                    LOG.error("Unable to assign value to field", e);
                 }
             }
         }
@@ -253,13 +266,22 @@ public class ReplayParser {
         Set<BeanDefinition> commandBeans = classPathScanning.findCandidateComponents("ca/tuatara/mmdoc/replay/data/command");
         for (BeanDefinition commandBean : commandBeans) {
             try {
-                Class<?> commandClass = Class.forName(commandBean.getBeanClassName());
-                CommandAction commandAction = commandClass.getAnnotation(CommandAction.class);
-                if (commandAction != null) {
-                    String[] actions = commandAction.value();
-                    for (String action : actions) {
-                        commandActionMap.put(action, (Class<? extends Command>) commandClass);
+                Class<?> beanClass = Class.forName(commandBean.getBeanClassName());
+                if (Command.class.isAssignableFrom(beanClass)) {
+                    Class<? extends Command> commandClass = (Class<? extends Command>) beanClass;
+                    CommandAction commandAction = commandClass.getAnnotation(CommandAction.class);
+                    if (commandAction != null) {
+                        String[] actions = commandAction.value();
+                        if (StringUtils.isEmpty(actions[0])) {
+                            commandActionMap.put(commandClass.getSimpleName(), commandClass);
+                        } else {
+                            for (String action : actions) {
+                                commandActionMap.put(action, commandClass);
+                            }
+                        }
                     }
+                } else {
+                    LOG.warn("Found @CommandAction class that doesn't extend Command. [{}]", beanClass.getName());
                 }
             } catch (ClassNotFoundException e) {
                 LOG.error("Unable to find command class", e);
